@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Fractal de Koch Animado</title>
+<style>
+  body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    text-align: center;
+    margin: 0;
+    padding: 0;
+    background: linear-gradient(to bottom, #f0f0ff, #dcdcff);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  h2 {
+    margin-top: 20px;
+    color: #4b0082;
+  }
+
+  .controls {
+    margin: 15px 0;
+    padding: 15px;
+    background: #e6e6fa;
+    border-radius: 12px;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 10px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+  }
+
+  .controls label {
+    margin: 0 5px;
+  }
+
+  input, select, button {
+    margin: 5px;
+    padding: 6px 10px;
+    border-radius: 5px;
+    border: 1px solid #aaa;
+    font-size: 14px;
+  }
+
+  button {
+    cursor: pointer;
+    border: none;
+    background: #6a5acd;
+    color: white;
+    transition: 0.3s;
+  }
+
+  button:hover {
+    background: #483d8b;
+  }
+
+  canvas {
+    border: 1px solid #333;
+    border-radius: 10px;
+    margin-bottom: 20px;
+    background: white;
+  }
+</style>
+</head>
+<body>
+
+<h2>Fractal de Koch Animado</h2>
+
+<div class="controls">
+  <label>Orden:
+    <input type="number" id="order" value="4" min="0" max="7">
+  </label>
+
+  <label>Lado:
+    <select id="side">
+      <option value="left">Mitad</option>
+      
+    </select>
+  </label>
+
+  <label>Color:
+    <input type="color" id="color" value="#6a0dad">
+  </label>
+
+  <label>Grosor:
+    <input type="number" id="lineWidth" value="2" min="1" max="10">
+  </label>
+
+  <button onclick="drawFractalAnimated()">Dibujar</button>
+</div>
+
+<canvas id="canvas" width="800" height="600"></canvas>
+
+<script>
+async function drawFractalAnimated() {
+  const order = document.getElementById("order").value;
+  const side = document.getElementById("side").value;
+  const color = document.getElementById("color").value;
+  const lineWidth = document.getElementById("lineWidth").value;
+
+  const res = await fetch(`/koch?order=${order}&side=${side}`);
+  const data = await res.json();
+  const x = data.x;
+  const y = data.y;
+
+  const canvas = document.getElementById("canvas");
+  const ctx = canvas.getContext("2d");
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  // Escalado automático
+  const minX = Math.min(...x);
+  const maxX = Math.max(...x);
+  const minY = Math.min(...y);
+  const maxY = Math.max(...y);
+
+  const scaleX = (canvas.width - 60) / (maxX - minX);
+  const scaleY = (canvas.height - 60) / (maxY - minY);
+  const scale = Math.min(scaleX, scaleY);
+
+  const offsetX = (canvas.width - (maxX - minX)*scale)/2;
+  const offsetY = (canvas.height + (maxY - minY)*scale)/2;
+
+  ctx.strokeStyle = color;
+  ctx.lineWidth = lineWidth;
+  ctx.beginPath();
+  ctx.moveTo(offsetX + (x[0]-minX)*scale, offsetY - (y[0]-minY)*scale);
+
+  let i = 1;
+
+  function drawStep() {
+    if (i >= x.length) return;
+    ctx.lineTo(offsetX + (x[i]-minX)*scale, offsetY - (y[i]-minY)*scale);
+    ctx.stroke();
+    i++;
+    requestAnimationFrame(drawStep);
+  }
+
+  drawStep();
+}
+
+// Dibujar al cargar
+drawFractalAnimated();
+</script>
+
+</body>
+</html>
